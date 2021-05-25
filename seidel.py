@@ -172,10 +172,14 @@ class Seidel(object):
         random.shuffle(self.constraints)
         # the non negativity constraints are applied in the code, no need to add them manually
         self.applied: [Constraint] = [Constraint("-1 0 0"), Constraint("0 -1 0")]
-        # self.solution = Point(0, 0)  # dummy value
-        # self.find_basic_solution()
-        C = 10**10
-        self.solution = Point (C/(self.target.x*2), C/(self.target.y*2))
+
+        self.solution = Point(0, 0)  # dummy value
+        self.find_basic_solution()
+
+        # or
+
+        # C = 10**10
+        # self.solution = Point (C/(self.target.x*2), C/(self.target.y*2))
 
     def find_basic_solution(self):
         # to find the basic solution
@@ -343,6 +347,7 @@ class Seidel(object):
                 self.status = Problem.infeasible
                 intersections = []
                 break
+
             for constr in self.applied:
                 if constr.contains(point):
                     continue

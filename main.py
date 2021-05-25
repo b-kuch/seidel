@@ -1,7 +1,7 @@
 from seidel import Seidel
 
 if __name__ == '__main__':
-    i = 2
+    i = 5
     problem = []
     with open('A.txt', 'r') as f:
         for line in f:
