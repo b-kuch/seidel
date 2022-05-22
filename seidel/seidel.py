@@ -2,25 +2,13 @@ from typing import List
 
 from .solver import SolvingMethod
 from .geometric_objects import Point, Intersection, Side
-from .linear_program import LinearProgram, ProblemStatus, AXIS_X, AXIS_Y
+from .linear_program import LinearProgram, ProgramStatus, AXIS_X, AXIS_Y
 
 class Seidel(SolvingMethod):
-    def __init__(self, program: LinearProgram):
-        self.program = program
-        self.status = ProblemStatus.NOT_SOLVED
+    def __init__(self):
+        ...
 
-        # self.target = program.target
-        self.constraints = program.constraints
-        self.applied = []
-
-        self.solution = Point(0, 0)
-        # other starting point
-        # C = 10**10
-        # self.solution = Point (C/(self.program.target.x*2), C/(self.program.target.y*2))
-        
-        self.find_basic_solution()
-
-    def find_basic_solution(self):
+    def find_basic_solution(self, program: LinearProgram):
         """To find the basic solution:
             1. Find constraints that are enclosing the space.
             2. Use them to calculate intersection points between themselves and between them and axes.
@@ -31,10 +19,10 @@ class Seidel(SolvingMethod):
         xyminus = None
         xminus = None
         yminus = None
-        for constr in self.program.constraints:
+        for constr in program.constraints:
             if constr.side() == (Side.MINUS, Side.MINUS):
                 xyminus = constr
-                # if there is a single constraint enclosing the problem,
+                # if there is a single constraint enclosing the program,
                 # we dont need to search for a pair
                 break
             elif constr.side()[0] == Side.MINUS:
@@ -62,41 +50,41 @@ class Seidel(SolvingMethod):
             possible_solutions.append(
                 xyminus.intersect(AXIS_Y)[0])
 
-            self.program.constraints.remove(xyminus)
+            program.constraints.remove(xyminus)
         else:
-            # there was no constraint that encloses the problem by itself
+            # there was no constraint that encloses the program by itself
             # we use xminus and yminus (if both exist) to cover the
             # (-inf; y) and (x; -inf) 'points'
 
             if xminus is None or yminus is None:
-                # the problem is unbounded or infeasible, there were no two constraints that
-                # can enclose the problem together,
+                # the program is unbounded or infeasible, there were no two constraints that
+                # can enclose the program together,
                 # nor there was a single constraint doing this
-                # OR there the constraint pair made problem infeasible
+                # OR there the constraint pair made program infeasible
 
                 # hypothesis
-                self.status = ProblemStatus.UNBOUNDED
+                program.status = ProgramStatus.UNBOUNDED
                 # if all below fails, this should be true
 
                 if xminus is None:
                     # check if any constraint covers xminus
                     # if it there is one, it was parallel to the yminus without any overlap
-                    for constr in self.program.constraints:
+                    for constr in program.constraints:
                         if constr.side()[0] == Side.MINUS:
-                            self.status = ProblemStatus.INFEASIBLE
+                            program.status = ProgramStatus.INFEASIBLE
                             break
                 elif yminus is None:
                     # same for yminus
-                    for constr in self.program.constraints:
+                    for constr in program.constraints:
                         if constr.side()[1] == Side.MINUS:
-                            self.status = ProblemStatus.INFEASIBLE
+                            program.status = ProgramStatus.INFEASIBLE
                             break
                 elif xminus is None and yminus is None:
                     # there are no constraints maybe ?
                     pass
 
             else:
-                # xminus and yminus exist so the problem can be enclosed
+                # xminus and yminus exist so the program can be enclosed
 
                 # the constraints cant be parallel to the axes in first two solutions because
                 # we only check them against one axis where we assured
@@ -134,43 +122,44 @@ class Seidel(SolvingMethod):
                     pass
 
         # proceed only when there are possible solutions
-        # (the only case when there are none is when problem is unbounded)
+        # (the only case when there are none is when program is unbounded)
         if len(possible_solutions) > 0:
             # need to check if the solutions are legal
             # ( if point.x >= 0 and point.y >= 0 )
-            legal_solutions = []
-            for sol in possible_solutions:
-                if sol.is_legal():
-                    legal_solutions.append(sol)
+            legal_solutions = [sol for sol in possible_solutions if sol.is_legal()]
 
             if len(legal_solutions) == 0:
-                # if there are no legal solutions, the problem is infeasible
-                self.status = ProblemStatus.INFEASIBLE
+                # if there are no legal solutions, the program is infeasible
+                program.status = ProgramStatus.INFEASIBLE
 
             else:
                 # we now have all the legal solutions, given the current constraints
                 # now we find  the basic solution with the greatest value of target function
                 # to compare against in the iterations
-                self.solution = legal_solutions[0]
-                for solution in legal_solutions:
-                    if self.program.target.f(solution) > self.program.target.f(self.solution):
-                        self.solution = solution
+                program.solution = max(legal_solutions, key=program.target)
 
-    def solve(self) -> LinearProgram:
-        while len(self.program.constraints) > 0 and self.status == ProblemStatus.NOT_SOLVED:
-            constraint = self.program.constraints.pop()
-            self.apply_constraint(constraint)
 
-        if len(self.program.constraints) == 0 and self.status == ProblemStatus.NOT_SOLVED:
-            self.status = ProblemStatus.OPTIMAL
+    def solve(self, program: LinearProgram) -> LinearProgram:
+        self.program = program
+        self.applied = []
+        program.solution = Point(0, 0)
+        # other starting point
+        # C = 10**10
+        # program.solution = Point (C/(program.target.x*2), C/(program.target.y*2))
+        
+        self.find_basic_solution(program)
+        while len(program.constraints) > 0 and program.status == ProgramStatus.NOT_SOLVED:
+            constraint = program.constraints.pop()
+            self.apply_constraint(program, constraint)
 
-        self.program.solution = self.solution
-        self.program.status = self.status
-        return self.program
+        if len(program.constraints) == 0 and program.status == ProgramStatus.NOT_SOLVED:
+            program.status = ProgramStatus.OPTIMAL
 
-    def apply_constraint(self, constraint):
+        return program
 
-        if constraint.contains(self.solution):
+    def apply_constraint(self, program, constraint):
+
+        if constraint.contains(program.solution):
             # the constraint doesnt change optimal solution
             self.applied.append(constraint)
             return
@@ -187,7 +176,7 @@ class Seidel(SolvingMethod):
                 continue
             elif status == Intersection.NONE:
                 # constraints are parallel and dont have common region
-                self.status = ProblemStatus.INFEASIBLE
+                program.status = ProgramStatus.INFEASIBLE
                 intersections = []
                 break
 
@@ -203,25 +192,21 @@ class Seidel(SolvingMethod):
 
         if len(intersections) == 0:
             print("There are no possible solutions")
-            self.status = ProblemStatus.INFEASIBLE
+            program.status = ProgramStatus.INFEASIBLE
         else:
-            self.solution = intersections[0]
+            program.solution = intersections[0]
             for solution in intersections:
-                if self.program.target.f(solution) > self.program.target.f(self.solution):
-                    self.solution = solution
+                if program.target(solution) > program.target(program.solution):
+                    program.solution = solution
             self.applied.append(constraint)
 
     def __str__(self):
-        if self.status == ProblemStatus.OPTIMAL:
+        if self.program.status == ProgramStatus.OPTIMAL:
             return (
-                "There is optimal solution\n" + 
-                str(self.solution) + 
-                f"\nThe value of target function at optimum is: {self.program.target.f(self.solution)}"
+                "There is optimal solution\n" 
+                + str(self.program.solution)
+                + f"\nThe value of target function at optimum is: {self.program.target(self.program.solution)}"
                 )
                 
-        elif self.status == ProblemStatus.UNBOUNDED:
-            return "Problem is unbounded"
-        elif self.status == ProblemStatus.INFEASIBLE:
-            return "Problem is infeasible"
-        elif self.status == ProblemStatus.NOT_SOLVED:
-            return "Problem is not solved yet"
+        else:
+            return str(self.program.status)

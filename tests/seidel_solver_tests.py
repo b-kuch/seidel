@@ -1,18 +1,18 @@
 import pytest
 
-from seidel.seidel import ProblemStatus
+from seidel.seidel import ProgramStatus
 import seidel
 
 @pytest.mark.parametrize('id,expected_status', [
-    (0, ProblemStatus.OPTIMAL),
-    (1, ProblemStatus.OPTIMAL),
-    (2, ProblemStatus.UNBOUNDED),
-    (3, ProblemStatus.INFEASIBLE),
-    (4, ProblemStatus.UNBOUNDED),
-    (5, ProblemStatus.OPTIMAL),
+    (0, ProgramStatus.OPTIMAL),
+    (1, ProgramStatus.OPTIMAL),
+    (2, ProgramStatus.UNBOUNDED),
+    (3, ProgramStatus.INFEASIBLE),
+    (4, ProgramStatus.UNBOUNDED),
+    (5, ProgramStatus.OPTIMAL),
 ])
 def test_seidel_solver_status(id, expected_status):
-    problem = seidel.read_problem(id, r'programs.txt')
-    solver = seidel.Solver(seidel.Seidel, problem)
-    program = solver.solve()
-    assert problem.status == expected_status
+    program = seidel.read_program(id, r'programs.txt')
+    solver = seidel.Solver(seidel.Seidel())
+    solver.solve(program)
+    assert program.status == expected_status

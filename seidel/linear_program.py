@@ -6,15 +6,18 @@ from enum import Enum
 
 from .geometric_objects import Line, Point, Side, Intersection
 
-class ProblemStatus(Enum):
-    NOT_SOLVED = 0
-    OPTIMAL = 1
-    INFEASIBLE = 2
-    UNBOUNDED = 3
+class ProgramStatus(Enum):
+    NOT_SOLVED = "Program is not solved yet"
+    OPTIMAL = "Program has optimal solution"
+    INFEASIBLE = "Program is infeasible"
+    UNBOUNDED = "Program is unbounded"
 
 class Target(Line):
-    def f(self, point: Point):
+    def f(self, point: Point) -> float:
         return point.x*self.x + point.y*self.y
+
+    def __call__(self, point: Point) -> float:
+        return self.f(point)
 
     def find_x(self, cmax, y):
         return (cmax + self.y*y) / self.x
@@ -129,7 +132,7 @@ class LinearProgram:
         positive_x: bool=True,
         positive_y: bool=True) -> None:
 
-        self.status = None
+        self.status = ProgramStatus.NOT_SOLVED
         self.solution = None
         self.target = target
         self.constraints = constraints

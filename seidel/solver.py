@@ -1,6 +1,8 @@
 from abc import abstractmethod, ABC
 from typing import Tuple
 
+from seidel.geometric_objects import Line
+
 from .linear_program import LinearProgram
 
 class SolvingMethod(ABC):
@@ -12,9 +14,8 @@ class SolvingMethod(ABC):
         ...
 
 class Solver:
-    def __init__(self, method: SolvingMethod, program: LinearProgram) -> None:
+    def __init__(self, method: SolvingMethod) -> None:
         self.method = method
-        self.program = program
 
-    def solve(self) -> LinearProgram:
-        self.method(self.program).solve()
+    def solve(self, program: LinearProgram) -> LinearProgram:
+        self.method.solve(program)
