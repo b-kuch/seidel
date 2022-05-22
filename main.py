@@ -1,19 +1,13 @@
-from seidel import Seidel
+import typer
+import seidel
 
-if __name__ == '__main__':
-    i = 5
-    problem = []
-    with open('A.txt', 'r') as f:
-        for line in f:
-            if line.startswith("!"+str(i)):
-                break
-        for line in f:
-            if line.startswith("!"):
-                break
-            if line.startswith("#") or line.startswith("\n"):
-                continue
-            problem.append(line)
-
-    program = Seidel(problem)
+def main(id: int, problem_file_path: str) -> seidel.Seidel:
+    problem = seidel.read_problem(id, problem_file_path)
+    program = seidel.Seidel(problem)
     program.solve()
-    print(program)
+    typer.echo(program)
+    return program
+
+
+if __name__ == "__main__":
+    typer.run(main)
