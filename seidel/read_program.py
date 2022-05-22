@@ -1,8 +1,8 @@
 from .linear_program import LinearProgram
 
 
-def read_problem(id: int, path: str) -> LinearProgram:
-    problem = []
+def read_program(id: int, path: str) -> LinearProgram:
+    program = []
     with open(path, 'r') as f:
         for line in f:
             if line.startswith("!"+str(id)):
@@ -12,7 +12,7 @@ def read_problem(id: int, path: str) -> LinearProgram:
                 break
             if line.startswith("#") or line.startswith("\n"):
                 continue
-            problem.append(line)
+            program.append(line)
 
-    problem = LinearProgram.from_strings(problem.pop(0), problem)
-    return problem
+    program = LinearProgram.from_strings(program.pop(0), program)
+    return program
