@@ -3,9 +3,9 @@ from .linear_program import LinearProgram
 
 def read_program(id: int, path: str) -> LinearProgram:
     program = []
-    with open(path, 'r') as f:
+    with open(path, "r") as f:
         for line in f:
-            if line.startswith("!"+str(id)):
+            if line.startswith("!" + str(id)):
                 break
         for line in f:
             if line.startswith("!"):

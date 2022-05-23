@@ -1,8 +1,9 @@
 from typing import List
 
+from .geometric_objects import Intersection, Point, Side
+from .linear_program import AXIS_X, AXIS_Y, LinearProgram, ProgramStatus
 from .solver import SolvingMethod
-from .geometric_objects import Point, Intersection, Side
-from .linear_program import LinearProgram, ProgramStatus, AXIS_X, AXIS_Y
+
 
 class Seidel(SolvingMethod):
     def __init__(self):
@@ -45,10 +46,8 @@ class Seidel(SolvingMethod):
             # intersect the constraint with the X and Y axes
             # no need to check intersection type
             self.applied.append(xyminus)
-            possible_solutions.append(
-                xyminus.intersect(AXIS_X)[0])
-            possible_solutions.append(
-                xyminus.intersect(AXIS_Y)[0])
+            possible_solutions.append(xyminus.intersect(AXIS_X)[0])
+            possible_solutions.append(xyminus.intersect(AXIS_Y)[0])
 
             program.constraints.remove(xyminus)
         else:
@@ -95,11 +94,9 @@ class Seidel(SolvingMethod):
                 # because the Y axis intersection must be illegal
                 self.applied.append(xminus)
                 self.applied.append(yminus)
-                possible_solutions.append(
-                    xminus.intersect(self.applied[0])[0])
+                possible_solutions.append(xminus.intersect(self.applied[0])[0])
                 # likewise, we only care about the Y axis for yminus
-                possible_solutions.append(
-                    yminus.intersect(self.applied[1])[0])
+                possible_solutions.append(yminus.intersect(self.applied[1])[0])
 
                 # the third solution is the intersection of the xminus and yminus
                 # this solution can have parallel lines so we cant always get intersection point
@@ -112,8 +109,7 @@ class Seidel(SolvingMethod):
                 # constraints cant be 'almost the same' (differ only by C coefficient) in this case
                 intersection = yminus.intersect(xminus)
                 if intersection[1] == Intersection.POINT:
-                    possible_solutions.append(
-                        intersection[0])
+                    possible_solutions.append(intersection[0])
                 elif intersection[1] == Intersection.OVERLAY:
                     # Solution space is a line
                     pass
@@ -138,7 +134,6 @@ class Seidel(SolvingMethod):
                 # to compare against in the iterations
                 program.solution = max(legal_solutions, key=program.target)
 
-
     def solve(self, program: LinearProgram) -> LinearProgram:
         self.program = program
         self.applied = []
@@ -146,9 +141,12 @@ class Seidel(SolvingMethod):
         # other starting point
         # C = 10**10
         # program.solution = Point (C/(program.target.x*2), C/(program.target.y*2))
-        
+
         self.find_basic_solution(program)
-        while len(program.constraints) > 0 and program.status == ProgramStatus.NOT_SOLVED:
+
+        while (
+            len(program.constraints) > 0 and program.status == ProgramStatus.NOT_SOLVED
+        ):
             constraint = program.constraints.pop()
             self.apply_constraint(program, constraint)
 
@@ -203,10 +201,10 @@ class Seidel(SolvingMethod):
     def __str__(self):
         if self.program.status == ProgramStatus.OPTIMAL:
             return (
-                "There is optimal solution\n" 
+                "There is optimal solution\n"
                 + str(self.program.solution)
                 + f"\nThe value of target function at optimum is: {self.program.target(self.program.solution)}"
-                )
-                
+            )
+
         else:
             return str(self.program.status)

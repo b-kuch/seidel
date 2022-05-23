@@ -1,6 +1,7 @@
 import typer
 import seidel
 
+
 def main(id: int, program_file_path: str) -> seidel.Seidel:
     program = seidel.read_program(id, program_file_path)
     solver = seidel.Seidel(program)

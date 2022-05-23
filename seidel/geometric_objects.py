@@ -2,7 +2,8 @@ from enum import Enum
 
 
 class Side(Enum):
-    """ Which side of the axis satisfies the constraint at almost entire length """
+    """Which side of the axis satisfies the constraint at almost entire length"""
+
     PLUS = -1
     MINUS = 1
     NEITHER = 0
@@ -18,6 +19,7 @@ class Region(Enum):
     NONE = 0
     LINE = 1
     STRIPE = 2
+
 
 class Point:
     def __init__(self, x: float, y: float):
@@ -35,7 +37,7 @@ class Point:
 
 class Line:
     def __init__(self, s: str):
-        coefficients = s.split(' ')
+        coefficients = s.split(" ")
         self.x = float(coefficients[0])
         self.y = float(coefficients[1])
 
@@ -44,4 +46,3 @@ class Line:
 
     def __repr__(self):
         return str(self.x) + "x + " + str(self.y) + "y"
-
