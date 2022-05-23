@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import Enum
 
 FLOAT_EQUALITY_DELTA = 0.01
@@ -13,16 +14,22 @@ class Side(Enum):
     NEITHER = 0
 
 
-class Intersection(Enum):
-    NONE = 0
-    POINT = 1
-    OVERLAY = 2
+class IntersectionType(Enum):
+    NONE = "Lines do not intersect (are parallel)"
+    POINT = "Lines intersect in a point"
+    OVERLAY = "Lines are overlayed"
 
 
 class Region(Enum):
     NONE = 0
     LINE = 1
     STRIPE = 2
+
+
+@dataclass
+class Intersection:
+    point: Point
+    type: IntersectionType
 
 
 class Point:

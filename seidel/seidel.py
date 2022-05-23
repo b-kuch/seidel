@@ -1,8 +1,8 @@
 from asyncio import constants
 from typing import List, Union
 
-from .geometric_objects import Intersection, Point, Side
-from .linear_program import AXIS_X, AXIS_Y, LinearProgram, ProgramStatus
+from .geometric_objects import IntersectionType, Point, Side
+from .linear_program import AXIS_X, AXIS_Y, Constraint, LinearProgram, ProgramStatus
 from .solver import SolvingMethod
 
 
@@ -30,7 +30,7 @@ class SeidelMethod(SolvingMethod):
         xminus = None
         yminus = None
         for constraint in program.constraints:
-            match constraint.side():
+            match constraint.sides():
                 case (Side.MINUS, Side.MINUS):
                     xyminus = constraint
                     # if there is a single constraint enclosing the program,
@@ -40,14 +40,14 @@ class SeidelMethod(SolvingMethod):
                     if yminus is None:
                         xminus = constraint
                     else:
-                        if yminus.intersect(constraint)[1] != Intersection.NONE:
+                        if yminus.intersect(constraint).type != IntersectionType.NONE:
                             xminus = constraint
                             break
                 case (_, Side.MINUS):
                     if xminus is None:
                         yminus = constraint
                     else:
-                        if xminus.intersect(constraint)[1] != Intersection.NONE:
+                        if xminus.intersect(constraint).type != IntersectionType.NONE:
                             yminus = constraint
                             break
         possible_solutions = []
@@ -56,8 +56,8 @@ class SeidelMethod(SolvingMethod):
             # intersect the constraint with the X and Y axes
             # no need to check intersection type
             self.applied.append(xyminus)
-            possible_solutions.append(xyminus.intersect(AXIS_X)[0])
-            possible_solutions.append(xyminus.intersect(AXIS_Y)[0])
+            possible_solutions.append(xyminus.intersect(AXIS_X).point)
+            possible_solutions.append(xyminus.intersect(AXIS_Y).point)
 
             program.constraints.remove(xyminus)
         else:
@@ -79,13 +79,13 @@ class SeidelMethod(SolvingMethod):
                     # check if any constraint covers xminus
                     # if it there is one, it was parallel to the yminus without any overlap
                     for constraint in program.constraints:
-                        if constraint.side()[0] == Side.MINUS:
+                        if constraint.sides()[0] == Side.MINUS:
                             program.status = ProgramStatus.INFEASIBLE
                             break
                 elif yminus is None:
                     # same for yminus
                     for constraint in program.constraints:
-                        if constraint.side()[1] == Side.MINUS:
+                        if constraint.sides()[1] == Side.MINUS:
                             program.status = ProgramStatus.INFEASIBLE
                             break
                 elif xminus is None and yminus is None:
@@ -104,26 +104,26 @@ class SeidelMethod(SolvingMethod):
                 # because the Y axis intersection must be illegal
                 self.applied.append(xminus)
                 self.applied.append(yminus)
-                possible_solutions.append(xminus.intersect(self.applied[0])[0])
+                possible_solutions.append(xminus.intersect(self.applied[0]).point)
                 # likewise, we only care about the Y axis for yminus
-                possible_solutions.append(yminus.intersect(self.applied[1])[0])
+                possible_solutions.append(yminus.intersect(self.applied[1]).point)
 
-                # the third solution is the intersection of the xminus and yminus
-                # this solution can have parallel lines so we cant always get intersection point
-                # if this happens, there are three cases
-                # 1) constraints overlap by a line (unbounded)
-                # 2) constraints overlap by a stripe (unbounded)
-                # 3) constraints dont overlap (infeasible)
-                # cases 1) 2) are unbounded
-                # case 3) is infeasible
-                # constraints cant be 'almost the same' (differ only by C coefficient) in this case
+                """the third solution is the intersection of the xminus and yminus
+                this solution can have parallel lines so we cant always get intersection point
+                if this happens, there are three cases
+                    1) constraints overlap by a line (unbounded)
+                    2) constraints overlap by a stripe (unbounded)
+                    3) constraints dont overlap (infeasible)
+                cases 1) 2) are unbounded
+                case 3) is infeasible
+                constraints cant be 'almost the same' (differ only by C coefficient) in this case"""
                 intersection = yminus.intersect(xminus)
-                if intersection[1] == Intersection.POINT:
-                    possible_solutions.append(intersection[0])
-                elif intersection[1] == Intersection.OVERLAY:
+                if intersection.type == IntersectionType.POINT:
+                    possible_solutions.append(intersection.point)
+                elif intersection.type == IntersectionType.OVERLAY:
                     # Solution space is a line
                     pass
-                elif intersection[1] == Intersection.NONE:
+                elif intersection.type == IntersectionType.NONE:
                     # constraints were parallel and dont overlap
                     pass
 
@@ -146,7 +146,7 @@ class SeidelMethod(SolvingMethod):
 
     def solve(self, program: LinearProgram) -> LinearProgram:
         self.program = program
-        self.applied = []
+        self.applied: List[Constraint] = []
         program.solution = self.initial_solution if not None else Point(0, 0)
         # other starting point
         # C = 10**10
@@ -181,30 +181,29 @@ class SeidelMethod(SolvingMethod):
 
         # list of all intersections that satisfy all applied constraints
         intersections: List[Point] = []
-        for con in self.applied:
-            point, status = constraint.intersect(con)
+        for applied in self.applied:
+            intersection = constraint.intersect(applied)
 
-            if status == Intersection.OVERLAY:
+            if intersection.type == IntersectionType.OVERLAY:
                 # if the constraints overlay, there is no need
                 continue
-            elif status == Intersection.NONE:
+            elif intersection.type == IntersectionType.NONE:
                 # constraints are parallel and dont have common region
                 program.status = ProgramStatus.INFEASIBLE
                 intersections = []
                 break
 
             for constr in self.applied:
-                if constr.contains(point):
+                if constr.contains(intersection.point):
                     continue
                 else:
                     # the point didnt belong to one of applied constraints
                     break
             else:
                 # the point belongs to all applied constraints
-                intersections.append(point)
+                intersections.append(intersection.point)
 
         if len(intersections) == 0:
-            print("There are no possible solutions")
             program.status = ProgramStatus.INFEASIBLE
         else:
             program.solution = intersections[0]

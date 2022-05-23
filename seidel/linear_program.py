@@ -4,7 +4,7 @@ import random
 from enum import Enum
 from typing import List, Tuple
 
-from .geometric_objects import Intersection, Line, Point, Side
+from .geometric_objects import Intersection, IntersectionType, Line, Point, Side
 
 
 class ProgramStatus(Enum):
@@ -41,26 +41,39 @@ class Constraint(Line):
     def __repr__(self):
         return f"{self.x}x + {self.y}y <= {self.b}"
 
-    def xside(self):
-        return Side.PLUS if self.x < 0 else Side.NEITHER if self.x == 0 else Side.MINUS
+    def xside(self) -> Side:
+        if self.x < 0:
+            return Side.PLUS
+        if self.x == 0:
+            return Side.NEITHER
+        return Side.MINUS
 
-    def yside(self):
-        return Side.PLUS if self.y < 0 else Side.NEITHER if self.y == 0 else Side.MINUS
+    def yside(self) -> Side:
+        if self.y < 0:
+            return Side.PLUS
+        if self.y == 0:
+            return Side.NEITHER
+        return Side.MINUS
 
-    def side(self):
+    def sides(self) -> Tuple[Side, Side]:
         return self.xside(), self.yside()
 
-    def fx(self, x):
+    def fx(self, x) -> float:
+        """Returns solution when x is known."""
         return x * self.slope() + self.b / self.y
 
-    def fy(self, y):
+    def fy(self, y) -> float:
+        """Returns solution when y is known."""
         return -1 * y * self.y / self.x + self.b / self.x
 
-    # is the point on the left side of the line
-    def contains(self, point):
+    def contains(self, point) -> bool:
+        """Returns whether the point is on the left side of the line."""
         return point.x * self.x + point.y * self.y <= self.b
 
-    def intersect(self, other) -> Tuple[Point, Intersection]:
+    def intersect(self, other: Constraint) -> Intersection:
+        """Intersects two constraint inequalities.
+
+        Returns intersection point (if exists) and interesction type"""
         l1 = self
         l2 = other
 
@@ -73,27 +86,27 @@ class Constraint(Line):
         if l1.x == l2.x and l1.y == l2.y:
             # and if the lines overlay
             if l1.b == l2.b:
-                return Point(0, l1.fx(0)), Intersection.OVERLAY
+                return Intersection(Point(0, l1.fx(0)), IntersectionType.OVERLAY)
             else:
                 # lines are parallel and dont overlay
-                return Point(0, l1.fx(0)), Intersection.NONE
+                return Intersection(Point(0, l1.fx(0)), IntersectionType.NONE)
         else:
             # resolving case where Ax + By <= C1 and -Ax -By <= C2
             if l1.x == -1 * l2.x and l1.y == -1 * l2.y:
                 # lines are parallel, but regions have inverse sides
                 if l1.b == -1 * l2.b:
                     # they share only line
-                    return Point(0, l1.fx(0)), Intersection.OVERLAY
+                    return Intersection(Point(0, l1.fx(0)), IntersectionType.OVERLAY)
                 else:
                     # they either have common stripe or dont overlap
                     if l1.x < 0:
                         # set the one with positive x as first
                         l1, l2 = l2, l1
                     if l1.b < -1 * l2.b:
-                        return Point(0, 0), Intersection.NONE
+                        return Intersection(Point(0, 0), IntersectionType.NONE)
                         # they dont overlap
                     else:
-                        return Point(0, 0), Intersection.NONE
+                        return Intersection(Point(0, 0), IntersectionType.NONE)
                         # they have common stripe
 
         # if self is horizontal (x==0 && y!=0)
@@ -104,7 +117,7 @@ class Constraint(Line):
                 x = l2.b / l2.x
             else:
                 x = l2.fy(y)
-            return Point(x, y), Intersection.POINT
+            return Intersection(Point(x, y), IntersectionType.POINT)
 
         # if self is vertical
         if l1.y == 0:
@@ -114,7 +127,7 @@ class Constraint(Line):
                 y = l2.b / l2.y
             else:
                 y = l2.fx(x)
-            return Point(x, y), Intersection.POINT
+            return Intersection(Point(x, y), IntersectionType.POINT)
 
         # if none above happened,
         # the intersection must be a point shared between 'generic' lines
@@ -123,7 +136,7 @@ class Constraint(Line):
         # where A = x, B = y, C=b
         x = (l1.y * l2.b - l2.y * l1.b) / (l2.x * l1.y - l1.x * l2.y)
         y = l1.fx(x)
-        return Point(x, y), Intersection.POINT
+        return Intersection(Point(x, y), IntersectionType.POINT)
 
 
 AXIS_X = Constraint("-1 0 0")
