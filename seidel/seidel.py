@@ -153,7 +153,10 @@ class SeidelMethod(SolvingMethod):
         # program.solution = Point (C/(program.target.x*2), C/(program.target.y*2))
 
         self.find_basic_solution(program)
-
+        assert program.solution is not None or program.status in [
+            ProgramStatus.INFEASIBLE,
+            ProgramStatus.UNBOUNDED,
+        ]
         while (
             len(program.constraints) > 0 and program.status == ProgramStatus.NOT_SOLVED
         ):
