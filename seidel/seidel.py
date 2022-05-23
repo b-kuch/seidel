@@ -1,3 +1,4 @@
+from asyncio import constants
 from typing import List, Union
 
 from .geometric_objects import Intersection, Point, Side
@@ -28,26 +29,27 @@ class SeidelMethod(SolvingMethod):
         xyminus = None
         xminus = None
         yminus = None
-        for constr in program.constraints:
-            if constr.side() == (Side.MINUS, Side.MINUS):
-                xyminus = constr
-                # if there is a single constraint enclosing the program,
-                # we dont need to search for a pair
-                break
-            elif constr.side()[0] == Side.MINUS:
-                if yminus is None:
-                    xminus = constr
-                else:
-                    if yminus.intersect(constr)[1] != Intersection.NONE:
-                        xminus = constr
-                        break
-            elif constr.side()[1] == Side.MINUS:
-                if xminus is None:
-                    yminus = constr
-                else:
-                    if xminus.intersect(constr)[1] != Intersection.NONE:
-                        yminus = constr
-                        break
+        for constraint in program.constraints:
+            match constraint.side():
+                case (Side.MINUS, Side.MINUS):
+                    xyminus = constraint
+                    # if there is a single constraint enclosing the program,
+                    # we dont need to search for a pair
+                    break
+                case (Side.MINUS, _):
+                    if yminus is None:
+                        xminus = constraint
+                    else:
+                        if yminus.intersect(constraint)[1] != Intersection.NONE:
+                            xminus = constraint
+                            break
+                case (_, Side.MINUS):
+                    if xminus is None:
+                        yminus = constraint
+                    else:
+                        if xminus.intersect(constraint)[1] != Intersection.NONE:
+                            yminus = constraint
+                            break
         possible_solutions = []
         # if we found single enclosing constraint, use it to calculate the two possible solutions
         if xyminus is not None:
@@ -76,14 +78,14 @@ class SeidelMethod(SolvingMethod):
                 if xminus is None:
                     # check if any constraint covers xminus
                     # if it there is one, it was parallel to the yminus without any overlap
-                    for constr in program.constraints:
-                        if constr.side()[0] == Side.MINUS:
+                    for constraint in program.constraints:
+                        if constraint.side()[0] == Side.MINUS:
                             program.status = ProgramStatus.INFEASIBLE
                             break
                 elif yminus is None:
                     # same for yminus
-                    for constr in program.constraints:
-                        if constr.side()[1] == Side.MINUS:
+                    for constraint in program.constraints:
+                        if constraint.side()[1] == Side.MINUS:
                             program.status = ProgramStatus.INFEASIBLE
                             break
                 elif xminus is None and yminus is None:
