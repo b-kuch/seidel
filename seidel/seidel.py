@@ -5,9 +5,16 @@ from .linear_program import AXIS_X, AXIS_Y, LinearProgram, ProgramStatus
 from .solver import SolvingMethod
 
 
-class Seidel(SolvingMethod):
-    def __init__(self, starting_solution: Union[Point, None] = None):
-        self.starting_solution = starting_solution
+class SeidelMethod(SolvingMethod):
+    """Seidel method of solving linear programs"""
+
+    def __init__(self, initial_solution: Union[Point, None] = None):
+        """Settings of this method.
+
+        Keyword arguments:
+        starting_solution --
+        """
+        self.initial_solution = initial_solution
 
     def find_basic_solution(self, program: LinearProgram):
         """To find the basic solution:
@@ -16,7 +23,8 @@ class Seidel(SolvingMethod):
         Best legal point will be the basic solution.
 
         The constraints should accept (-inf; y) and (x; -inf) 'points' to enclose the space.
-        It can be a single constraint with positive coefficients or two constraints covering the 'points' separately."""
+        It can be a single constraint with positive coefficients or two constraints covering the 'points' separately.
+        """
         xyminus = None
         xminus = None
         yminus = None
@@ -137,7 +145,7 @@ class Seidel(SolvingMethod):
     def solve(self, program: LinearProgram) -> LinearProgram:
         self.program = program
         self.applied = []
-        program.solution = self.starting_solution if not None else Point(0, 0)
+        program.solution = self.initial_solution if not None else Point(0, 0)
         # other starting point
         # C = 10**10
         # program.solution = Point (C/(program.target.x*2), C/(program.target.y*2))

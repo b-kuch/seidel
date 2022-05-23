@@ -1,7 +1,7 @@
 import pytest
 import seidel
 from seidel.geometric_objects import FLOAT_EQUALITY_DELTA, Point
-from seidel.seidel import ProgramStatus
+from seidel.seidel import ProgramStatus, SeidelMethod
 
 
 @pytest.mark.parametrize(
@@ -17,7 +17,7 @@ from seidel.seidel import ProgramStatus
 )
 def test_seidel_solver_status(id, expected_status, expected_solution, expected_target):
     program = seidel.read_program(id, r"programs.txt")
-    solver = seidel.Solver(seidel.Seidel())
+    solver = seidel.Solver(seidel.SeidelMethod())
     solver.solve(program)
     assert program.status == expected_status
     assert program.solution == expected_solution
