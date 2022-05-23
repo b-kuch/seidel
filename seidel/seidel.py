@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 
 from .geometric_objects import Intersection, Point, Side
 from .linear_program import AXIS_X, AXIS_Y, LinearProgram, ProgramStatus
@@ -6,8 +6,8 @@ from .solver import SolvingMethod
 
 
 class Seidel(SolvingMethod):
-    def __init__(self):
-        ...
+    def __init__(self, starting_solution: Union[Point, None] = None):
+        self.starting_solution = starting_solution
 
     def find_basic_solution(self, program: LinearProgram):
         """To find the basic solution:
@@ -137,7 +137,7 @@ class Seidel(SolvingMethod):
     def solve(self, program: LinearProgram) -> LinearProgram:
         self.program = program
         self.applied = []
-        program.solution = Point(0, 0)
+        program.solution = self.starting_solution if not None else Point(0, 0)
         # other starting point
         # C = 10**10
         # program.solution = Point (C/(program.target.x*2), C/(program.target.y*2))
@@ -153,6 +153,8 @@ class Seidel(SolvingMethod):
         if len(program.constraints) == 0 and program.status == ProgramStatus.NOT_SOLVED:
             program.status = ProgramStatus.OPTIMAL
 
+        if program.status != ProgramStatus.OPTIMAL:
+            program.solution = None
         return program
 
     def apply_constraint(self, program, constraint):

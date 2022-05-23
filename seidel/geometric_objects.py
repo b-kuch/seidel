@@ -1,4 +1,8 @@
+from __future__ import annotations
+
 from enum import Enum
+
+FLOAT_EQUALITY_DELTA = 0.01
 
 
 class Side(Enum):
@@ -29,7 +33,13 @@ class Point:
     def __repr__(self):
         self.x += 0.0
         self.y += 0.0
-        return "(" + str(self.x) + "; " + str(self.y) + ")"
+        return f"({self.x}, {self.y})"
+
+    def __eq__(self, other: Point) -> bool:
+        return (
+            self.x - other.x < FLOAT_EQUALITY_DELTA
+            and self.y - other.y < FLOAT_EQUALITY_DELTA
+        )
 
     def is_legal(self):
         return self.x >= 0 and self.y >= 0
@@ -45,4 +55,4 @@ class Line:
         return -1 * self.x / self.y
 
     def __repr__(self):
-        return str(self.x) + "x + " + str(self.y) + "y"
+        return f"{self.x}x + {self.y}y"
