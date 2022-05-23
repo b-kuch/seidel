@@ -16,6 +16,8 @@ class ProgramStatus(Enum):
 
 class Target(Line):
     def f(self, point: Point) -> float:
+        if point is None:
+            return None
         return point.x * self.x + point.y * self.y
 
     def __call__(self, point: Point) -> float:
@@ -37,7 +39,7 @@ class Constraint(Line):
         self.b = float(coefficients[2])
 
     def __repr__(self):
-        return str(self.x) + "x + " + str(self.y) + "y <= " + str(self.b)
+        return f"{self.x}x + {self.y}y <= {self.b}"
 
     def xside(self):
         return Side.PLUS if self.x < 0 else Side.NEITHER if self.x == 0 else Side.MINUS
@@ -152,3 +154,15 @@ class LinearProgram:
         cls, target_str: str, constraints_strs: List[str]
     ) -> LinearProgram:
         return cls(Target(target_str), [Constraint(c) for c in constraints_strs])
+
+    def __str__(self):
+        if self.status == ProgramStatus.OPTIMAL:
+            return (
+                "There is an optimal solution\n"
+                + str(self.solution)
+                + "\nThe value of target function at optimum is: "
+                + str(self.target(self.solution))
+            )
+
+        else:
+            return str(self.status) + str(self.solution)
