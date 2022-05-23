@@ -49,6 +49,7 @@ class Point:
         )
 
     def is_legal(self):
+        """Does point belong to I quart of coordinate system"""
         return self.x >= 0 and self.y >= 0
 
 
@@ -60,6 +61,17 @@ class Line:
 
     def slope(self):
         return -1 * self.x / self.y
+
+    def is_parallel(self, other: Line) -> bool:
+        """Does consider case where both coefficients
+        are opposite to other line coefficients."""
+        return (self.x, self.y) == (other.x, other.y) or (self.x, self.y) == (
+            -1 * other.x,
+            -1 * other.y,
+        )
+
+    def is_same_direction(self, other: Line) -> bool:
+        return self.x * other.x >= 0 and self.y * other.y >= 0
 
     def __repr__(self):
         return f"{self.x}x + {self.y}y"

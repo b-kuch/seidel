@@ -157,9 +157,9 @@ class LinearProgram:
         self.target = target
         self.constraints = constraints
         if positive_x:
-            self.constraints.append(Constraint("-1 0 0"))
+            self.constraints.append(AXIS_X)
         if positive_y:
-            self.constraints.append(Constraint("0 -1 0"))
+            self.constraints.append(AXIS_Y)
         random.shuffle(self.constraints)
 
     @classmethod
