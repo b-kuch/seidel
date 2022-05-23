@@ -1,7 +1,6 @@
 import pytest
-
-from seidel.seidel import ProgramStatus
 import seidel
+from seidel.seidel import ProgramStatus
 
 
 @pytest.mark.parametrize(
