@@ -1,10 +1,11 @@
 import typer
+
 import seidel
 
 
-def main(id: int, program_file_path: str) -> seidel.Seidel:
+def main(id: int, program_file_path: str = "programs.txt") -> seidel.Seidel:
     program = seidel.read_program(id, program_file_path)
-    solver = seidel.Seidel(program)
+    solver = seidel.Solver(seidel.Seidel())
     solver.solve(program)
     typer.echo(program)
     return program
