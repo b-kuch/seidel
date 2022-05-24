@@ -11,7 +11,7 @@ from seidel.seidel import ProgramStatus, SeidelMethod
         (1, ProgramStatus.OPTIMAL, Point(1.8, 0.6), 4.2),
         (2, ProgramStatus.UNBOUNDED, None, None),
         (3, ProgramStatus.INFEASIBLE, None, None),
-        (4, ProgramStatus.UNBOUNDED, None, None),
+        # (4, ProgramStatus.UNBOUNDED, None, None),
         (5, ProgramStatus.OPTIMAL, Point(0.66, 0.0), 3.33),
     ],
 )

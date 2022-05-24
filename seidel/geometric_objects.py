@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import Enum
 
 FLOAT_EQUALITY_DELTA = 0.01
@@ -13,16 +14,22 @@ class Side(Enum):
     NEITHER = 0
 
 
-class Intersection(Enum):
-    NONE = 0
-    POINT = 1
-    OVERLAY = 2
+class IntersectionType(Enum):
+    NONE = "Lines do not intersect (are parallel)"
+    POINT = "Lines intersect in a point"
+    OVERLAY = "Lines are overlayed"
 
 
 class Region(Enum):
     NONE = 0
     LINE = 1
     STRIPE = 2
+
+
+@dataclass
+class Intersection:
+    point: Point
+    type: IntersectionType
 
 
 class Point:
@@ -42,6 +49,7 @@ class Point:
         )
 
     def is_legal(self):
+        """Does point belong to I quart of coordinate system"""
         return self.x >= 0 and self.y >= 0
 
 
@@ -53,6 +61,17 @@ class Line:
 
     def slope(self):
         return -1 * self.x / self.y
+
+    def is_parallel(self, other: Line) -> bool:
+        """Does consider case where both coefficients
+        are opposite to other line coefficients."""
+        return (self.x, self.y) == (other.x, other.y) or (self.x, self.y) == (
+            -1 * other.x,
+            -1 * other.y,
+        )
+
+    def is_same_direction(self, other: Line) -> bool:
+        return self.x * other.x >= 0 and self.y * other.y >= 0
 
     def __repr__(self):
         return f"{self.x}x + {self.y}y"
