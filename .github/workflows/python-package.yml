@@ -38,6 +38,9 @@ jobs:
     - name: Check security vulnerabilities with bandit
       run: |
         # run all checks for all code but tests
+        ls .
+        pwd
+        tree
         bandit -r . -x ./src/seidel/tests
         # run bandit on tests, skip the assertion vulnerability
         bandit -r tests --skip B101
