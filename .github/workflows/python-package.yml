@@ -29,7 +29,6 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install flake8 pytest
         # remove the self install from requirements
-        if [ -f requirements.txt ]; then sed -i '/-e/d' requirements.txt; fi
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Lint with flake8
       run: |
@@ -43,9 +42,9 @@ jobs:
         ls .
         pwd
         tree
-        bandit -r . -x ./tests
+        bandit -r . -x ./tests,./src
         # run bandit on tests, skip the assertion vulnerability
-        bandit -r tests --skip B101
+        bandit -r tests --skip B101 -x ./src
     - name: Test with pytest
       run: |
         pytest
