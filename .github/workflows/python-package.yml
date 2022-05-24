@@ -37,7 +37,10 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Check security vulnerabilities with bandit
       run: |
-        bandit -r .
+        # run all checks for all code but tests
+        bandit -r . -x tests
+        # run bandit on tests, skip the assertion vulnerability
+        bandit -r tests --skip B101
     - name: Test with pytest
       run: |
         pytest
