@@ -28,10 +28,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install flake8 pytest
-<<<<<<< HEAD
-        # remove the self install from requirements
-=======
->>>>>>> 59ec0cf3c1fd4edb7a4075419e250d4aa29e87e9
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Lint with flake8
       run: |
